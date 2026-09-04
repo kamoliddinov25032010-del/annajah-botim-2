@@ -4,8 +4,10 @@ from aiogram import Bot
 from db import (
     get_users, get_alphabet, get_hikmatlar,
     get_cartoons, get_stories, get_calligraphy,
-    get_today_task, create_today_task, get_user_streak
+    get_today_task, create_today_task, get_user_streak,
+    get_all_prayer_users, has_sent_prayer, mark_prayer_sent
 )
+from handlers.prayer import get_prayer_times_cached, PRAYER_LABELS
 import random
 
 # ==============================
@@ -22,6 +24,11 @@ async def send_daily_reminders(bot: Bot):
         now = datetime.now()
         hour = now.hour
         minute = now.minute
+
+        # ============================
+        # NAMOZ VAQTLARI ESLATMASI (har daqiqa tekshiriladi)
+        # ============================
+        await _check_prayer_reminders(bot, now)
 
         # ============================
         # ERTALAB SOAT 9:00 — Kunlik dars
@@ -222,3 +229,42 @@ async def _send_content(bot: Bot, user_id: int, category: str, content):
             await bot.send_video(user_id, video_id)
     except Exception as e:
         print(f"Kontent yuborishda xato: {e}")
+
+async def _check_prayer_reminders(bot: Bot, now: datetime):
+    """Namoz vaqtlari eslatmasi — har daqiqa chaqiriladi"""
+
+    current_hhmm = now.strftime("%H:%M")
+    today = now.strftime("%Y-%m-%d")
+
+    users = get_all_prayer_users()
+
+    if not users:
+        return
+
+    cache = {}
+
+    for user_id, city, country in users:
+        key = (city, country)
+
+        if key not in cache:
+            try:
+                cache[key] = await get_prayer_times_cached(city, country)
+            except Exception as e:
+                print(f"Namoz vaqti olishda xato ({city}): {e}")
+                continue
+
+        times = cache[key]
+
+        for prayer, time_str in times.items():
+            if time_str == current_hhmm and not has_sent_prayer(user_id, today, prayer):
+                try:
+                    label = PRAYER_LABELS[prayer]
+                    await bot.send_message(
+                        user_id,
+                        f"🕌 <b>{label} vaqti bo'ldi!</b>\n\n"
+                        f"🤲 Namozga shoshiling.",
+                        parse_mode="HTML"
+                    )
+                    mark_prayer_sent(user_id, today, prayer)
+                except Exception as e:
+                    print(f"Namoz eslatmasi xato {user_id}: {e}")

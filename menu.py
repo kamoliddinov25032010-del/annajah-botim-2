@@ -13,6 +13,16 @@ main_menu = ReplyKeyboardMarkup(
             KeyboardButton(text="👨‍👩‍👧 Ota-ona paneli"),
         ],
         [
+            KeyboardButton(text="📝 Ustozdan ro'yxatdan o'tish"),
+        ],
+        [
+            KeyboardButton(text="❓ Savol berish"),
+            KeyboardButton(text="🕐 Namoz vaqtlari"),
+        ],
+         [
+            KeyboardButton(text="🗳️ Fikr-mulohaza qoldirish"),
+        ],
+        [
             KeyboardButton(text="🖼️ Suratli lug'atlar"),
             KeyboardButton(text="🎬 Multfilm darslar"),
             KeyboardButton(text="🤖 AI Ustoz")
@@ -24,6 +34,7 @@ main_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="👥 Do'stlarni taklif qilish"),
+            KeyboardButton(text="🎮 Do'stlar bilan bellashuv"),
         ],
         [
             KeyboardButton(text="📄 PDF qo'llanmalar"),

@@ -18,6 +18,8 @@ admin_menu = ReplyKeyboardMarkup(
             KeyboardButton(text="🔤 Arab tili alifbosini boshqarish"),
             KeyboardButton(text="👨‍👩‍👧 Ota-ona bog'lash"),
         ],
+        [KeyboardButton(text="🚫 Foydalanuvchini bloklash"), KeyboardButton(text="✅ Blokdan chiqarish")],
+        [KeyboardButton(text="📋 Bloklanganlar ro'yxati"), KeyboardButton(text="✉️ Shaxsiy xabar yuborish")],
         [
             KeyboardButton(text="⚙️ PDF boshqaruvi"),
             KeyboardButton(text="⚙️ Qissalarni boshqarish"),
@@ -30,7 +32,15 @@ admin_menu = ReplyKeyboardMarkup(
             KeyboardButton(text="🎞 GIF boshqaruvi"),
         ],
         [
+            KeyboardButton(text="📊 Umumiy dashboard"),
+            KeyboardButton(text="🗳️ Fikr-mulohazalar"),
+            KeyboardButton(text="❓ Javobsiz savollar"),
+        ],
+        [
+            KeyboardButton(text="💳 To'lov belgilash"), KeyboardButton(text="✅ To'lovlarni belgilash"),
+            KeyboardButton(text="📋 Qarzdorlar ro'yxati"), KeyboardButton(text="🔔 Qarzdorlarga eslatma"),
             KeyboardButton(text="⬅️ Asosiy menyu"),
+            KeyboardButton(text="🤖 AI Admin yordamchisi"),
         ],
     ],
     resize_keyboard=True
@@ -58,6 +68,8 @@ teacher_admin_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="👨‍🏫 Ustozlarni ko'rish")],
         [KeyboardButton(text="✏️ Ustozni tahrirlash")],
         [KeyboardButton(text="🗑️ Ustozni o'chirish")],
+        [KeyboardButton(text="🆔 Ustozga ID biriktirish")],
+        [KeyboardButton(text="➕ Guruh qo'shish"), KeyboardButton(text="🗑️ Guruhni o'chirish")],
         [KeyboardButton(text="⬅️ Admin panel")],
     ],
     resize_keyboard=True

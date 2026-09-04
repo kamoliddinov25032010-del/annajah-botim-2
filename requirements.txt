@@ -2,4 +2,3 @@ aiogram==3.22.0
 python-dotenv
 sqlalchemy
 aiosqlite
-groq

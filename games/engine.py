@@ -37,3 +37,29 @@ def get_shuffled_questions(level="beginner"):
     random.shuffle(shuffled)
 
     return shuffled
+
+
+def get_duel_questions(count=5):
+    pool = beginner + elementary
+    selected = random.sample(pool, min(count, len(pool)))
+
+    shuffled = []
+
+    for q in selected:
+        answers = q["answers"].copy()
+
+        correct_answer = answers[
+            ["A", "B", "C", "D"].index(q["correct"])
+        ]
+
+        random.shuffle(answers)
+
+        new_correct = ["A", "B", "C", "D"][answers.index(correct_answer)]
+
+        shuffled.append({
+            "question": q["question"],
+            "answers": answers,
+            "correct": new_correct
+        })
+
+    return shuffled

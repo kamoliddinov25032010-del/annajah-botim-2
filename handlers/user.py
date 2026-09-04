@@ -1,9 +1,12 @@
+import json
+
 from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from states import SearchState
+from states import SearchState, TeacherPanelState
 from aiogram.fsm.context import FSMContext
 from db import get_search_items, get_category_name
+from db import get_teacher_by_telegram
 from config import ADMIN_IDS
 from db import create_today_task, get_today_task
 from menu import main_menu
@@ -41,6 +44,8 @@ from db import (
     add_referral,
     get_referral_count,
     get_referral_leaderboard,
+    join_duel,
+    get_duel,
 )
 router = Router()
 
@@ -51,9 +56,24 @@ async def back_main_menu(message: Message, state: FSMContext):
 
 
 @router.message(CommandStart())
-async def start(message: Message, bot: Bot):
+async def start(message: Message, bot: Bot, state: FSMContext):
     user_id = message.from_user.id
     name = message.from_user.first_name
+
+    # ==============================
+    # USTOZ PANELI TEKSHIRUVI
+    # Agar bu ID biror ustozga biriktirilgan bo'lsa,
+    # oddiy menyu o'rniga parol so'raladi.
+    # ==============================
+    teacher = get_teacher_by_telegram(user_id)
+    if teacher:
+        await state.clear()
+        await state.set_state(TeacherPanelState.waiting_password)
+        await message.answer(
+            f"🎓 Assalomu alaykum, ustoz {teacher[2]}!\n\n"
+            f"Ustoz paneliga kirish uchun parolni kiriting:"
+        )
+        return
 
     # Yangi foydalanuvchimi? (referral uchun users jadvalidan aniqlaymiz)
     brand_new = not user_exists(user_id)
@@ -70,48 +90,81 @@ async def start(message: Message, bot: Bot):
     # ==============================
     referral_bonus_text = ""
 
-    if brand_new:
-        parts = message.text.split(maxsplit=1)
-        payload = parts[1].strip() if len(parts) > 1 else ""
+    parts = message.text.split(maxsplit=1)
+    payload = parts[1].strip() if len(parts) > 1 else ""
 
-        if payload.startswith("ref_"):
-            try:
-                referrer_id = int(payload.replace("ref_", "", 1))
-            except ValueError:
-                referrer_id = None
+    if payload.startswith("ref_") and brand_new:
+        try:
+            referrer_id = int(payload.replace("ref_", "", 1))
+        except ValueError:
+            referrer_id = None
 
-            if referrer_id and referrer_id != user_id and user_exists(referrer_id):
-                is_new_referral = add_referral(referrer_id, user_id)
+        if referrer_id and referrer_id != user_id and user_exists(referrer_id):
+            is_new_referral = add_referral(referrer_id, user_id)
 
-                if is_new_referral:
-                    # Taklif qilgan foydalanuvchiga mukofot
-                    create_game_user(referrer_id)
-                    add_xp(referrer_id, 100)
-                    add_coin(referrer_id, 50)
+            if is_new_referral:
+                # Taklif qilgan foydalanuvchiga mukofot
+                create_game_user(referrer_id)
+                add_xp(referrer_id, 100)
+                add_coin(referrer_id, 50)
 
-                    try:
-                        ref_count = get_referral_count(referrer_id)
-                        await bot.send_message(
-                            referrer_id,
-                            f"🎉 <b>Tabriklaymiz!</b>\n\n"
-                            f"Siz taklif qilgan do'stingiz botga qo'shildi! 👥\n\n"
-                            f"⭐ +100 XP\n"
-                            f"🪙 +50 Coin\n\n"
-                            f"📊 Jami taklif qilganlaringiz: {ref_count} kishi",
-                            parse_mode="HTML"
-                        )
-                    except Exception:
-                        pass
-
-                    # Yangi foydalanuvchiga xush kelibsiz bonusi
-                    create_game_user(user_id)
-                    add_xp(user_id, 30)
-                    add_coin(user_id, 20)
-
-                    referral_bonus_text = (
-                        "\n\n🎁 <b>Do'stingiz taklifi orqali kirdingiz!</b>\n"
-                        "⭐ +30 XP va 🪙 +20 Coin sizga ham berildi!\n"
+                try:
+                    ref_count = get_referral_count(referrer_id)
+                    await bot.send_message(
+                        referrer_id,
+                        f"🎉 <b>Tabriklaymiz!</b>\n\n"
+                        f"Siz taklif qilgan do'stingiz botga qo'shildi! 👥\n\n"
+                        f"⭐ +100 XP\n"
+                        f"🪙 +50 Coin\n\n"
+                        f"📊 Jami taklif qilganlaringiz: {ref_count} kishi",
+                        parse_mode="HTML"
                     )
+                except Exception:
+                    pass
+
+                # Yangi foydalanuvchiga xush kelibsiz bonusi
+                create_game_user(user_id)
+                add_xp(user_id, 30)
+                add_coin(user_id, 20)
+
+                referral_bonus_text = (
+                    "\n\n🎁 <b>Do'stingiz taklifi orqali kirdingiz!</b>\n"
+                    "⭐ +30 XP va 🪙 +20 Coin sizga ham berildi!\n"
+                )
+
+    elif payload.startswith("duel_"):
+        try:
+            duel_id = int(payload.replace("duel_", "", 1))
+        except ValueError:
+            duel_id = None
+
+        if duel_id:
+            joined = join_duel(duel_id, user_id)
+
+            if joined:
+                from handlers.duel import send_duel_question
+
+                duel_row = get_duel(duel_id)
+                player1_id = duel_row[1]
+                questions = json.loads(duel_row[3])
+
+                try:
+                    await bot.send_message(
+                        player1_id,
+                        "🎉 <b>Do'stingiz bellashuvga qo'shildi!</b>\n\n"
+                        "⚔️ Bellashuv boshlanmoqda!",
+                        parse_mode="HTML"
+                    )
+                except Exception:
+                    pass
+
+                await send_duel_question(bot, player1_id, duel_id, questions[0], 0, len(questions))
+                await send_duel_question(bot, user_id, duel_id, questions[0], 0, len(questions))
+            else:
+                await message.answer(
+                    "❌ Bu bellashuv havolasi endi amal qilmaydi "
+                    "(band bo'lgan yoki muddati o'tgan)."
+                )
 
     # Yangi foydalanuvchimi? (xush kelibsiz xabari uchun)
     history = get_history(user_id, limit=1)
@@ -198,8 +251,6 @@ async def start(message: Message, bot: Bot):
             "👑 <b>Admin paneli:</b> /admin",
             parse_mode="HTML"
         )
-
-
 
 @router.message(F.text == "🏫 Annajah haqida")
 async def about(message: Message):
@@ -333,22 +384,24 @@ async def hikmat(message: Message):
 
 @router.message(F.text == "📄 PDF qo'llanmalar")
 async def pdf(message: Message):
+    import asyncio
+
     complete_pdf_task(message.from_user.id)
     log_activity(message.from_user.id, "📄 PDF ko'rdi")
-
     pdfs = get_pdfs()
-
     if not pdfs:
         await message.answer("📄 Hozircha PDF qo'llanmalar mavjud emas.")
         return
-
     complete_video_task(message.from_user.id, "pdf")
-
     for pdf_id, file_id, title in pdfs:
-        await message.answer_document(
-            document=file_id,
-            caption=f"📚 {title}"
-        )
+        try:
+            await message.answer_document(
+                document=file_id,
+                caption=f"📚 {title}"
+            )
+        except Exception as e:
+            print("PDF yuborishda xato:", repr(e))
+        await asyncio.sleep(0.5)
 
 
 @router.message(F.text == "📞 Bog'lanish")
@@ -421,7 +474,8 @@ async def search_start(message: Message, state: FSMContext):
     "🔍 Nima qidirmoqchisiz?\n\n"
     "Masalan:\n"
     "• Alifbo\n"
-    "• Hikmat\n"
+
+"• Hikmat\n"
     "• PDF\n"
     "• Qissa\n"
     "• Multfilm\n"
