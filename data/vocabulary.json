@@ -1,0 +1,27 @@
+[
+  {
+    "question": "Kitob arab tilida qanday aytiladi?",
+    "options": ["قلم", "كتاب", "بيت", "مدرسة"],
+    "answer": 2
+  },
+  {
+    "question": "Qalam arab tilida qanday aytiladi?",
+    "options": ["قلم", "بيت", "كتاب", "ولد"],
+    "answer": 1
+  },
+  {
+    "question": "Uy arab tilida qanday aytiladi?",
+    "options": ["مدرسة", "بيت", "باب", "ولد"],
+    "answer": 2
+  },
+  {
+    "question": "Eshik arab tilida qanday aytiladi?",
+    "options": ["نافذة", "باب", "قلم", "كتاب"],
+    "answer": 2
+  },
+  {
+    "question": "Maktab arab tilida qanday aytiladi?",
+    "options": ["بيت", "ولد", "مدرسة", "باب"],
+    "answer": 3
+  }
+]
