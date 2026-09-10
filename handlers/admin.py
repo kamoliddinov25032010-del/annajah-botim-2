@@ -1530,3 +1530,4 @@ async def _execute_ai_action(action_type, params, bot: Bot):
             return f"❌ {fullname} ga xabar yuborilmadi (botni bloklagan bo'lishi mumkin)."
 
     return "❓ Noma'lum amal turi."
+    
