@@ -7,7 +7,8 @@ from db import get_users
 from aiogram import Bot
 from db import link_parent_child, unlink_parent_child
 
-from config import ADMIN_IDS
+from config import ADMIN_IDS, CHANNEL_IDS
+import asyncio
 from menu import main_menu
 from menu_admin import (
     admin_menu,
@@ -505,29 +506,47 @@ async def broadcast_start(message: Message, state: FSMContext):
         "✅ PDF\n\n"
         "Hammasi qo'llab-quvvatlanadi."
     )
+async def _send_copy(bot: Bot, chat_id, from_chat_id: int, message_id: int) -> bool:
+    """Bitta chatga (foydalanuvchi yoki kanal) xabar nusxasini yuborishga urinish."""
+    try:
+        await bot.copy_message(
+            chat_id=chat_id,
+            from_chat_id=from_chat_id,
+            message_id=message_id,
+        )
+        return True
+    except Exception:
+        return False
+
+
 @router.message(BroadcastState.waiting_message)
 async def broadcast(message: Message, state: FSMContext, bot: Bot):
 
     users = get_users()
 
-    success = 0
+    # Foydalanuvchilarga va kanallarga bir vaqtning o'zida (parallel) yuboriladi
+    user_tasks = [
+        _send_copy(bot, user[0], message.chat.id, message.message_id)
+        for user in users
+    ]
+    channel_tasks = [
+        _send_copy(bot, channel_id, message.chat.id, message.message_id)
+        for channel_id in CHANNEL_IDS
+    ]
 
-    for user in users:
-        try:
-            await bot.copy_message(
-                chat_id=user[0],
-                from_chat_id=message.chat.id,
-                message_id=message.message_id
-            )
-            success += 1
-        except:
-            pass
+    user_results = await asyncio.gather(*user_tasks) if user_tasks else []
+    channel_results = await asyncio.gather(*channel_tasks) if channel_tasks else []
+
+    success = sum(user_results)
+    channel_success = sum(channel_results)
 
     await state.clear()
 
-    await message.answer(
-        f"✅ Xabar {success} ta foydalanuvchiga yuborildi."
-    )
+    report = f"✅ Xabar {success} ta foydalanuvchiga yuborildi."
+    if CHANNEL_IDS:
+        report += f"\n📢 Kanallarga: {channel_success}/{len(CHANNEL_IDS)} ta yuborildi."
+
+    await message.answer(report)
 
 @router.message(F.text == "👥 Foydalanuvchilar")
 async def users_list(message: Message):
