@@ -543,6 +543,7 @@ async def broadcast(message: Message, state: FSMContext, bot: Bot):
     await state.clear()
 
     report = f"✅ Xabar {success} ta foydalanuvchiga yuborildi."
+    report += f"\n🔧 DEBUG: CHANNEL_IDS = {CHANNEL_IDS!r}"
     if CHANNEL_IDS:
         report += f"\n📢 Kanallarga: {channel_success}/{len(CHANNEL_IDS)} ta yuborildi."
 
@@ -1530,4 +1531,3 @@ async def _execute_ai_action(action_type, params, bot: Bot):
             return f"❌ {fullname} ga xabar yuborilmadi (botni bloklagan bo'lishi mumkin)."
 
     return "❓ Noma'lum amal turi."
-    
