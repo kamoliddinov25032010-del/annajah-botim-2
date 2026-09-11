@@ -3,3 +3,4 @@ python-dotenv
 sqlalchemy
 aiosqlite
 groq
+tzdata
