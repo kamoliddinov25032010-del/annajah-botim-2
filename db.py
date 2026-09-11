@@ -85,7 +85,12 @@ CREATE TABLE IF NOT EXISTS hikmatlar (
     text TEXT
 )
 """)
-    
+
+    # "teachers" jadvali shu funksiya ichida allaqachon yaratilgan,
+    # shuning uchun ustun qo'shish ham shu yerda - jadval yaratilgandan KEYIN - bajariladi.
+    _add_column_if_missing("teachers", "telegram_id", "INTEGER")
+    _add_column_if_missing("teachers", "password", "TEXT DEFAULT '999999'")
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS alphabet(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1688,9 +1693,6 @@ def _add_column_if_missing(table, column, coltype):
     if column not in cols:
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {coltype}")
         conn.commit()
-
-_add_column_if_missing("teachers", "telegram_id", "INTEGER")
-_add_column_if_missing("teachers", "password", "TEXT DEFAULT '999999'")
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS groups(
