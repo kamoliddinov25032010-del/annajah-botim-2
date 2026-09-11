@@ -4,7 +4,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from config import BOT_TOKEN
 from db import create_tables
-from ban_middleware import BanMiddleware                       
+from ban_middleware import BanMiddleware
+from register_middleware import RegisterMiddleware                       
 from handlers.user import router as user_router
 from handlers.admin import router as admin_router
 from handlers.cartoon import router as cartoon_router
@@ -34,6 +35,8 @@ dp = Dispatcher(storage=MemoryStorage())
 
 dp.message.outer_middleware(BanMiddleware())
 dp.callback_query.outer_middleware(BanMiddleware())
+dp.message.outer_middleware(RegisterMiddleware())
+dp.callback_query.outer_middleware(RegisterMiddleware())
 
 dp.include_router(teacher_panel_router)
 dp.include_router(student_registration_router)
