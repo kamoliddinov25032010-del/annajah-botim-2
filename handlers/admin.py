@@ -70,6 +70,23 @@ def is_admin(user_id: int):
 # ADMIN PANEL
 # =========================
 
+@router.message(Command("export_db"))
+async def export_db(message: Message, bot: Bot):
+    """Vaqtinchalik: hozirgi jonli bazani (annajah.db) Telegram orqali yuboradi.
+    Volume sozlangandan keyin bu buyruqni o'chirib tashlash mumkin."""
+    if not is_admin(message.from_user.id):
+        return
+    try:
+        from db import DB_PATH
+        from aiogram.types import FSInputFile
+        await message.answer_document(
+            FSInputFile(DB_PATH),
+            caption="📦 Joriy bazaning zaxira nusxasi."
+        )
+    except Exception as e:
+        await message.answer(f"❌ Xatolik: {e}")
+
+
 @router.message(Command("admin"))
 async def admin_panel(message: Message):
     if not is_admin(message.from_user.id):
