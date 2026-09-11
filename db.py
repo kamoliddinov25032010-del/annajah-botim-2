@@ -1,6 +1,12 @@
 import sqlite3
 import random
-conn = sqlite3.connect("annajah.db", check_same_thread=False)
+import os
+
+# Railway'da doimiy saqlash uchun Volume yo'lidan foydalaniladi (DB_PATH env).
+# Agar DB_PATH sozlanmagan bo'lsa (masalan local kompyuterda test qilayotganda),
+# oddiy "annajah.db" ishlatiladi.
+DB_PATH = os.getenv("DB_PATH", "annajah.db")
+conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 cursor = conn.cursor()
 
 
