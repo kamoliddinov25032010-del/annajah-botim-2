@@ -537,34 +537,67 @@ async def _send_copy(bot: Bot, chat_id, from_chat_id: int, message_id: int) -> b
 
 
 @router.message(BroadcastState.waiting_message)
-async def broadcast(message: Message, state: FSMContext, bot: Bot):
+async def broadcast_preview(message: Message, state: FSMContext):
+    await state.update_data(
+        bc_chat_id=message.chat.id,
+        bc_message_id=message.message_id,
+    )
+    await state.set_state(BroadcastState.waiting_confirm)
 
-    users = get_users()
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Ha, kanallarga ham yuborilsin", callback_data="bc_channels_yes")],
+        [InlineKeyboardButton(text="🚫 Yo'q, faqat foydalanuvchilarga", callback_data="bc_channels_no")],
+        [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="bc_cancel")],
+    ])
 
-    # Foydalanuvchilarga va kanallarga bir vaqtning o'zida (parallel) yuboriladi
-    user_tasks = [
-        _send_copy(bot, user[0], message.chat.id, message.message_id)
-        for user in users
-    ]
-    channel_tasks = [
-        _send_copy(bot, channel_id, message.chat.id, message.message_id)
-        for channel_id in CHANNEL_IDS
-    ]
+    await message.answer(
+        "📨 Xabar tayyor.\n\nKanallarga ham yuborilsinmi?",
+        reply_markup=keyboard
+    )
 
-    user_results = await asyncio.gather(*user_tasks) if user_tasks else []
-    channel_results = await asyncio.gather(*channel_tasks) if channel_tasks else []
 
-    success = sum(user_results)
-    channel_success = sum(channel_results)
+@router.callback_query(BroadcastState.waiting_confirm, F.data == "bc_cancel")
+async def broadcast_cancel(call: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await call.message.edit_text("❌ Xabar yuborish bekor qilindi.")
+    await call.answer()
+
+
+@router.callback_query(BroadcastState.waiting_confirm, F.data.in_({"bc_channels_yes", "bc_channels_no"}))
+async def broadcast_send(call: CallbackQuery, state: FSMContext, bot: Bot):
+    data = await state.get_data()
+    from_chat_id = data.get("bc_chat_id")
+    message_id = data.get("bc_message_id")
+    send_to_channels = call.data == "bc_channels_yes"
 
     await state.clear()
+    await call.message.edit_text("⏳ Yuborilmoqda...")
+
+    users = get_users()
+    user_tasks = [
+        _send_copy(bot, user[0], from_chat_id, message_id)
+        for user in users
+    ]
+    user_results = await asyncio.gather(*user_tasks) if user_tasks else []
+    success = sum(user_results)
 
     report = f"✅ Xabar {success} ta foydalanuvchiga yuborildi."
-    report += f"\n🔧 DEBUG: CHANNEL_IDS = {CHANNEL_IDS!r}"
-    if CHANNEL_IDS:
-        report += f"\n📢 Kanallarga: {channel_success}/{len(CHANNEL_IDS)} ta yuborildi."
 
-    await message.answer(report)
+    if send_to_channels:
+        if CHANNEL_IDS:
+            channel_tasks = [
+                _send_copy(bot, channel_id, from_chat_id, message_id)
+                for channel_id in CHANNEL_IDS
+            ]
+            channel_results = await asyncio.gather(*channel_tasks)
+            channel_success = sum(channel_results)
+            report += f"\n📢 Kanallarga: {channel_success}/{len(CHANNEL_IDS)} ta yuborildi."
+        else:
+            report += "\n⚠️ Kanallar sozlanmagan (CHANNEL_IDS bo'sh)."
+
+    await call.message.edit_text(report)
+    await call.answer()
+
 
 @router.message(F.text == "👥 Foydalanuvchilar")
 async def users_list(message: Message):
