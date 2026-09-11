@@ -7,10 +7,10 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 admin_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text="⚙️ Annajahni boshqarish"),
-            KeyboardButton(text="⚙️ Ustozlarni boshqarish"),
-            KeyboardButton(text="📞 Bog'lanishni boshqarish"),
-            KeyboardButton(text="📊 Statistika"),
+            KeyboardButton(text="💳 To'lov belgilash"), KeyboardButton(text="✅ To'lovlarni belgilash"),
+            KeyboardButton(text="📋 Qarzdorlar ro'yxati"), KeyboardButton(text="🔔 Qarzdorlarga eslatma"),
+            KeyboardButton(text="⬅️ Asosiy menyu"),
+            KeyboardButton(text="🤖 AI Admin yordamchisi"),
         ],
         [
             KeyboardButton(text="⚙️ Multfilmlarni boshqarish"),
@@ -37,10 +37,9 @@ admin_menu = ReplyKeyboardMarkup(
             KeyboardButton(text="❓ Javobsiz savollar"),
         ],
         [
-            KeyboardButton(text="💳 To'lov belgilash"), KeyboardButton(text="✅ To'lovlarni belgilash"),
-            KeyboardButton(text="📋 Qarzdorlar ro'yxati"), KeyboardButton(text="🔔 Qarzdorlarga eslatma"),
-            KeyboardButton(text="⬅️ Asosiy menyu"),
-            KeyboardButton(text="🤖 AI Admin yordamchisi"),
+            KeyboardButton(text="⚙️ Annajahni boshqarish"),
+            KeyboardButton(text="⚙️ Ustozlarni boshqarish"),
+            KeyboardButton(text="📞 Bog'lanishni boshqarish"),
         ],
     ],
     resize_keyboard=True
