@@ -101,7 +101,7 @@ def ask_ai(user_id: int, question: str):
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT + profile_text}
             ] + history,
@@ -257,7 +257,7 @@ def ask_admin_ai(question: str, context: str, history: list = None):
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=messages,
             temperature=0.3,
             max_tokens=1024,
