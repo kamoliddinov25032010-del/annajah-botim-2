@@ -67,6 +67,7 @@ class ContactState(StatesGroup):
     waiting_delete = State()
 class BroadcastState(StatesGroup):
     waiting_message = State()
+    waiting_confirm = State()
 class SearchState(StatesGroup):
     waiting_query = State()
     waiting_number = State()
