@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, date
+from zoneinfo import ZoneInfo
 from aiogram import Bot
 from db import (
     get_users, get_alphabet, get_hikmatlar,
@@ -10,8 +11,10 @@ from db import (
 from handlers.prayer import get_prayer_times_cached, PRAYER_LABELS
 import random
 
+TASHKENT_TZ = ZoneInfo("Asia/Tashkent")
+
 # ==============================
-# SOZLAMALAR
+# SOZLAMALAR (Toshkent vaqti bo'yicha)
 # ==============================
 ERTALAB_SOAT = 9    # Ertalab eslatma
 KECHQURUN_SOAT = 20 # Kechqurun eslatma
@@ -21,7 +24,7 @@ TUN_SOAT = 22       # Tun eslatma (bajarmaganlar uchun)
 async def send_daily_reminders(bot: Bot):
     """Kunlik eslatmalar yuboruvchi"""
     while True:
-        now = datetime.now()
+        now = datetime.now(TASHKENT_TZ)
         hour = now.hour
         minute = now.minute
 
